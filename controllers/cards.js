@@ -1,10 +1,10 @@
 const Card = require('../models/card');
-const { showErrorStatus } = require('../errors/errors');
+const { errorMessages, errorStatus, showErrorStatus } = require('../errors/errors');
 
 const getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.send(cards))
-    .catch((err) => showErrorStatus(res, err));
+    .catch(() => res.status(errorStatus.SERVER).send(errorMessages.ERROR_SERVER));
 };
 
 const createCard = (req, res) => {
@@ -17,8 +17,12 @@ const createCard = (req, res) => {
 
 const deleteCard = (req, res) => {
   Card.findByIdAndDelete(req.params.cardId)
-    .then(() => {
-      res.send({ message: 'Карточка удалена' });
+    .then((card) => {
+      if (!card) {
+        throw new Error();
+      } else {
+        res.send({ message: 'Карточка удалена' });
+      }
     })
     .catch((err) => showErrorStatus(res, err));
 };
@@ -29,7 +33,13 @@ const likeCard = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send(card))
+    .then((card) => {
+      if (!card) {
+        throw new Error();
+      } else {
+        res.send(card);
+      }
+    })
     .catch((err) => showErrorStatus(res, err));
 };
 
@@ -39,7 +49,13 @@ const dislikeCard = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send(card))
+    .then((card) => {
+      if (!card) {
+        throw new Error();
+      } else {
+        res.send(card);
+      }
+    })
     .catch((err) => showErrorStatus(res, err));
 };
 
