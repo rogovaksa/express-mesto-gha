@@ -25,6 +25,10 @@ app.use((req, res, next) => {
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
 
+app.all('*', (req, res) => {
+  res.status(404).send({ message: 'Неправильный путь' });
+});
+
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console
   console.log('Сервер запущен');
