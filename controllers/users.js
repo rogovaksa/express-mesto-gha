@@ -1,24 +1,29 @@
 const User = require('../models/user');
+const {
+  ERROR_CODE_BAD_REQUEST,
+  ERROR_CODE_NOT_FOUND,
+  ERROR_CODE_SERVER,
+} = require('../utils/errors');
 
 const getUsers = (req, res) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch((err) => res.status(500).send({ message: err.message }));
+    .catch((err) => res.status(ERROR_CODE_SERVER).console.error({ message: err.message }));
 };
 
 const getUserById = (req, res) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        return res.status(404).send({ message: 'Пользователь не найден' });
+        return res.status(ERROR_CODE_NOT_FOUND).send({ message: 'Пользователь не найден' });
       }
       return res.send(user);
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные при создании пользователя' });
+        return res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
       }
-      return res.status(500).send({ message: err.message });
+      return res.status(ERROR_CODE_SERVER).console.error({ message: err.message });
     });
 };
 
@@ -29,9 +34,9 @@ const createUser = (req, res) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные при создании пользователя' });
+        return res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании пользователя' });
       }
-      return res.status(500).send({ message: err.message });
+      return res.status(ERROR_CODE_SERVER).console.error({ message: err.message });
     });
 };
 
@@ -47,9 +52,9 @@ const updateUserProfile = (req, res) => {
     }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные при обновлении профиля' });
+        return res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении профиля' });
       }
-      return res.status(500).send({ message: err.message });
+      return res.status(ERROR_CODE_SERVER).console.error({ message: err.message });
     });
 };
 
@@ -65,9 +70,9 @@ const updateUserAvatar = (req, res) => {
     }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(400).send({ message: 'Переданы некорректные данные при обновлении аватара' });
+        return res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Переданы некорректные данные при обновлении аватара' });
       }
-      return res.status(500).send({ message: err.message });
+      return res.status(ERROR_CODE_SERVER).console.error({ message: err.message });
     });
 };
 
