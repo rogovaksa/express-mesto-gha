@@ -8,7 +8,7 @@ const {
 const getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.send(cards))
-    .catch((err) => res.status(ERROR_CODE_SERVER).console.error({ message: err.message }));
+    .catch(() => res.status(ERROR_CODE_SERVER).send({ message: 'Ошибка на сервере' }));
 };
 
 const createCard = (req, res) => {
@@ -20,7 +20,7 @@ const createCard = (req, res) => {
       if (err.name === 'ValidationError') {
         return res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Переданы некорректные данные при создании карточки' });
       }
-      return res.status(ERROR_CODE_SERVER).console.error({ message: err.message });
+      return res.status(ERROR_CODE_SERVER).send({ message: 'Ошибка на сервере' });
     });
 };
 
@@ -36,7 +36,7 @@ const deleteCard = (req, res) => {
       if (err.name === 'CastError') {
         return res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
       }
-      return res.status(ERROR_CODE_SERVER).console.error({ message: err.message });
+      return res.status(ERROR_CODE_SERVER).send({ message: 'Ошибка на сервере' });
     });
 };
 
@@ -56,7 +56,7 @@ const likeCard = (req, res) => {
       if (err.name === 'CastError') {
         return res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Переданы некорректные данные для постановки лайка' });
       }
-      return res.status(ERROR_CODE_SERVER).console.error({ message: err.message });
+      return res.status(ERROR_CODE_SERVER).send({ message: 'Ошибка на сервере' });
     });
 };
 
@@ -76,7 +76,7 @@ const dislikeCard = (req, res) => {
       if (err.name === 'CastError') {
         return res.status(ERROR_CODE_BAD_REQUEST).send({ message: 'Переданы некорректные данные при снятии лайка' });
       }
-      return res.status(ERROR_CODE_SERVER).console.error({ message: err.message });
+      return res.status(ERROR_CODE_SERVER).send({ message: 'Ошибка на сервере' });
     });
 };
 
