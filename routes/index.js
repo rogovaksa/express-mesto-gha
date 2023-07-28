@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { celebrate, Joi } = require('celebrate');
-const rateLimit = require('express-rate-limit');
+// const rateLimit = require('express-rate-limit');
 const { createUser, login } = require('../controllers/users');
 const auth = require('../middlewares/auth');
 
@@ -11,14 +11,14 @@ const cardsRouter = require('./cards');
 
 const { ERROR_CODE_NOT_FOUND } = require('../utils/errorStatus');
 
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-});
+// const limiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 100,
+//   standardHeaders: true,
+//   legacyHeaders: false,
+// });
 
-router.use(limiter);
+// router.use(limiter);
 
 router.post(
   '/signup',
