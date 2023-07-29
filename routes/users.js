@@ -8,19 +8,22 @@ const {
   updateUserAvatar,
   getCurrentUser,
 } = require('../controllers/users');
-const { reg } = require('../utils/link');
+const { URL_REGEX } = require('../utils/link');
 
 router.get('/', getUsers);
+
 router.get('/me', getCurrentUser);
+
 router.get(
   '/:userId',
   celebrate({
     params: Joi.object().keys({
-      userId: Joi.string().required().length(24).hex(),
+      userId: Joi.string().length(24).hex().required(),
     }),
   }),
   getUserById,
 );
+
 router.patch(
   '/me',
   celebrate({
@@ -31,11 +34,12 @@ router.patch(
   }),
   updateUserProfile,
 );
+
 router.patch(
   '/me/avatar',
   celebrate({
     body: Joi.object().keys({
-      avatar: Joi.string().regex(reg).required(),
+      avatar: Joi.string().regex(URL_REGEX),
     }),
   }),
   updateUserAvatar,

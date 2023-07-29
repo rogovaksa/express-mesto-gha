@@ -1,10 +1,6 @@
-const { ERROR_CODE_AUTH } = require('../utils/errorStatus');
-
-class UnauthorizedError extends Error {
+module.exports = class UnauthorizedError extends Error {
   constructor(message) {
     super(message);
-    this.statusCode = ERROR_CODE_AUTH;
+    this.statusCode = 401;
   }
-}
-
-module.exports = UnauthorizedError;
+};

@@ -1,9 +1,11 @@
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
-const NotFoundError = require('../errors/NotFoundError');
 
-const { JWT_SECRET = 'JWT_SECRET' } = process.env;
+const NotFoundError = require('../errors/NotFoundError');
+const UnauthorizedError = require('../errors/UnauthorizedError');
+const ConflictError = require('../errors/ConflictError');
+const InaccurateDataError = require('../errors/InaccurateDataError');
 
 const getUsers = (req, res, next) => {
   User.find({})
@@ -12,92 +14,129 @@ const getUsers = (req, res, next) => {
 };
 
 const getUserById = (req, res, next) => {
-  User.findById(req.params.userId)
+  const { userId } = req.params;
+  User.findById(userId)
     .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Пользователь с указанным id не найден');
-      }
-      return res.send(user);
+      if (user) return res.send({ user });
+      throw new NotFoundError('Пользователь с указанным id не найден');
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new InaccurateDataError('Передан некорректный id'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const createUser = (req, res, next) => {
   const {
+    email,
+    password,
     name,
     about,
     avatar,
-    email,
-    password,
   } = req.body;
 
   bcrypt.hash(password, 10)
     .then((hash) => User.create({
+      email,
+      password: hash,
       name,
       about,
       avatar,
-      email,
-      password: hash,
     }))
     .then((user) => {
-      res.status(201).send({
-        _id: user._id,
-        name: user.name,
-        about: user.about,
-        avatar: user.avatar,
-        email: user.email,
+      const { _id } = user;
+      return res.status(201).send({
+        email,
+        name,
+        about,
+        avatar,
+        _id,
       });
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.code === 11000) {
+        next(new ConflictError('Пользователь с таким электронным адресом уже зарегистрирован'));
+      } else if (err.name === 'ValidationError') {
+        next(new InaccurateDataError('Переданы некорректные данные при регистрации пользователя'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const updateUserProfile = (req, res, next) => {
   const { name, about } = req.body;
+  const { userId } = req.user;
 
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(userId, { name, about }, { new: true, runValidators: true })
     .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Пользователь с указанным id не найден');
-      }
-      res.send(user);
+      if (user) return res.send({ user });
+      throw new NotFoundError('Пользователь с указанным id не найден');
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        next(new InaccurateDataError('Переданы некорректные данные при обновлении профиля пользователя'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const updateUserAvatar = (req, res, next) => {
   const { avatar } = req.body;
+  const { userId } = req.user;
 
-  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(userId, { avatar }, { new: true, runValidators: true })
     .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Пользователь с указанным id не найден');
-      }
-      res.send(user);
+      if (user) return res.send({ user });
+      throw new NotFoundError('Пользователь с указанным id не найден');
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'ValidationError' || err.name === 'CastError') {
+        next(new InaccurateDataError('Переданы некорректные данные при обновлении профиля пользователя'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const login = (req, res, next) => {
   const { email, password } = req.body;
   return User.findUserByCredentials(email, password)
-    .then((user) => {
-      const token = jwt.sign({ _id: user._id }, JWT_SECRET);
-      res.send({ token });
+    .then(({ _id: userId }) => {
+      if (userId) {
+        const token = jwt.sign(
+          { userId },
+          'JWT_SECRET',
+          { expiresIn: '7d' },
+        );
+
+        return res.send({ _id: token });
+      }
+
+      throw new UnauthorizedError('Неправильные почта или пароль');
     })
     .catch(next);
 };
 
 const getCurrentUser = (req, res, next) => {
-  const userId = req.user._id;
+  const { userId } = req.user;
   User.findById(userId)
     .then((user) => {
-      if (!user) {
-        throw new NotFoundError('Пользователь с указанным id не найден');
-      } else {
-        res.send(user);
-      }
+      if (user) return res.send({ user });
+
+      throw new NotFoundError('Пользователь с указанным id не найден');
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new InaccurateDataError('Передан некорректный id'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports = {
