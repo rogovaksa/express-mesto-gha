@@ -7,7 +7,7 @@ const InaccurateDataError = require('../errors/InaccurateDataError');
 const getCards = (req, res, next) => {
   Card.find({})
     .populate(['owner', 'likes'])
-    .then((cards) => res.send(cards))
+    .then((cards) => res.send({ data: cards }))
     .catch(next);
 };
 
@@ -26,22 +26,26 @@ const createCard = (req, res, next) => {
 };
 
 const deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  const { cardId } = req.params;
+  const { userId } = req.user;
+  Card.findByIdAndDelete(cardId)
+    .orFail(new Error('InvalidCardId'))
     .then((card) => {
-      if (!card) {
-        throw new NotFoundError('Карточка не найдена');
-      }
-      if (card.owner.toString() !== req.user._id) {
-        throw new ForbiddenError('Вы можете удалять только свои карточки');
+      if (!card.owner.equals(userId)) {
+        next(new ForbiddenError('Вы можете удалять только свои карточки'));
       } else {
-        Card.deleteOne(card)
-          .then(() => {
-            res.send({ message: 'Карточка удалена' });
-          })
-          .catch(next);
+        res.send({ data: card });
       }
     })
-    .catch(next);
+    .catch((err) => {
+      if (err.message === 'InvalidCardId') {
+        next(new NotFoundError('Карточка не найдена'));
+      } else if (err.name === 'CastError') {
+        next(new InaccurateDataError('Передан некорректный id карточки'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 const likeCard = (req, res, next) => {

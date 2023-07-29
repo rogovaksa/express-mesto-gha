@@ -24,16 +24,6 @@ router.post(
   createCard,
 );
 
-router.delete(
-  '/:cardId',
-  celebrate({
-    params: Joi.object().keys({
-      cardId: Joi.string().length(24).hex().required(),
-    }),
-  }),
-  deleteCard,
-);
-
 router.put(
   '/:cardId/likes',
   celebrate({
@@ -52,6 +42,16 @@ router.delete(
     }),
   }),
   dislikeCard,
+);
+
+router.delete(
+  '/:cardId',
+  celebrate({
+    params: Joi.object().keys({
+      cardId: Joi.string().length(24).hex().required(),
+    }),
+  }),
+  deleteCard,
 );
 
 module.exports = router;
