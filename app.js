@@ -6,6 +6,7 @@ const { errors } = require('celebrate');
 
 const errorsMiddleware = require('./middlewares/errors');
 const limiter = require('./middlewares/rateLimit');
+const NotFoundError = require('./errors/NotFoundError');
 
 const signupRouter = require('./routes/signup');
 const signinRouter = require('./routes/signin');
@@ -41,9 +42,7 @@ app.use(authMiddleware);
 app.use('/users', usersRouter);
 app.use('/cards', cardsRouter);
 
-app.all('*', (req, res) => {
-  res.status(404).send({ message: 'Неправильный путь' });
-});
+app.use((req, res, next) => next(new NotFoundError('Неправильный путь')));
 
 app.use(errors());
 
